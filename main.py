@@ -95,7 +95,7 @@ async def start(ctx):
 
     ctx.voice_client.start_recording(discord.sinks.PCMSink(), finished_callback, ctx) # Start the recording
     print("Recording...")
-    await asyncio.sleep(0.4)
+    await asyncio.sleep(0.2)
     ctx.voice_client.stop_recording()
     print("Stopped!")
 
