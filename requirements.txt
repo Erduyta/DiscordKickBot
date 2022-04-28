@@ -1,3 +1,4 @@
+--pre
 aiohttp==3.8.1
 aiosignal==1.2.0
 async-timeout==4.0.2
@@ -13,7 +14,7 @@ idna==3.3
 idna-ssl==1.1.0
 mccabe==0.6.1
 multidict==6.0.2
-py-cord[voice]
+py-cord[voice]==2.0.0b7
 pycodestyle==2.8.0
 pycparser==2.21
 pyflakes==2.4.0
@@ -23,3 +24,4 @@ typing_extensions==4.2.0
 urllib3==1.26.9
 yarl==1.7.2
 youtube-dl==2021.12.17
+grpcio-tools

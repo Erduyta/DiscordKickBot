@@ -15,7 +15,7 @@ There are a number of utility commands being showcased here."""
 
 intents = discord.Intents.default()
 intents.members = True
-#intents.message_content = True
+intents.message_content = True
 
 bot = commands.Bot(command_prefix="?", description=description, intents=intents)
 URL = 'https://stt.api.cloud.yandex.net/speech/v1/stt:recognize'
