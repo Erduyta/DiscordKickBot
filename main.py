@@ -104,5 +104,7 @@ async def stop(ctx):
     await ctx.voice_client.disconnect()
     print("Stopped!")
 
-token = 'OTY5MTgzNzUyNjUzNzk5NDg0.YmpstQ.dVnQ6mpc_9adkO4XrJMgC5BiBkA'
-bot.run(token)
+
+if __name__ == "__main__":
+    token = 'OTY5MTgzNzUyNjUzNzk5NDg0.YmpstQ.dVnQ6mpc_9adkO4XrJMgC5BiBkA'
+    bot.run(token)

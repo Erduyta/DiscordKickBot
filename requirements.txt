@@ -13,7 +13,7 @@ idna==3.3
 idna-ssl==1.1.0
 mccabe==0.6.1
 multidict==6.0.2
-py-cord @ file:///C:/dev/discordbot/pycord
+py-cord[voice]
 pycodestyle==2.8.0
 pycparser==2.21
 pyflakes==2.4.0
