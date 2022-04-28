@@ -52,7 +52,7 @@ async def generate_from_queue(queue):
         yield await queue.get()
 
 
-async def communicate_queue(gen):
+async def communicate_queue(gen, ctx):
     global stub
 
     it = stub.StreamingRecognize(
@@ -66,9 +66,14 @@ async def communicate_queue(gen):
             #print(r)
             try:
                 print('Start chunk: ')
-                for alternative in r.chunks[0].alternatives:
-                    print('alternative: ', alternative.text)
+                for chunk in r.chunks:
+                    for alternative in chunk.alternatives:
+                        print('alternative: ', alternative.text)
+                        if 'никита' in str(alternative.text).lower():
+                            member_to_kick = ctx.voice_client.channel.guild.get_member(217594729896869888)
+                            await member_to_kick.edit(voice_channel=None)
                 print('Is final: ', r.chunks[0].final)
+
                 #print('')
             except LookupError:
                 print('Not available chunks')
@@ -87,7 +92,7 @@ async def on_ready():
 async def start(ctx):
     await ctx.author.voice.channel.connect()
     asyncio.ensure_future(
-        communicate_queue(generate_from_queue(speaking_queue))
+        communicate_queue(generate_from_queue(speaking_queue), ctx)
     )
     await serve(ctx)
     # Connect to the voice channel of the author
@@ -118,9 +123,6 @@ async def finished_callback(sink, ctx):
         # file = discord.File(audio.file, f"{user_id}.{sink.encoding}")
         # print(dir(audio.file))
         # text = recognize(audio.file).get('result', '').lower()
-        # if 'тимыч' in text:
-        #     member_to_kick = ctx.voice_client.channel.guild.get_member(user_id)
-        #     await member_to_kick.edit(voice_channel=None)
     await serve(ctx)
 
 @bot.command()
