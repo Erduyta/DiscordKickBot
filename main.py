@@ -6,6 +6,7 @@ import discord
 from discord.ext import commands
 import json
 import requests
+import yandex.cloud.ai.stt.v2.stt_service_pb2 as stt_service_pb2
 
 
 description = """An example bot to showcase the discord.ext.commands extension
