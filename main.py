@@ -1,3 +1,4 @@
+import os
 import random
 import time
 import asyncio
@@ -14,7 +15,7 @@ There are a number of utility commands being showcased here."""
 
 intents = discord.Intents.default()
 intents.members = True
-intents.message_content = True
+#intents.message_content = True
 
 bot = commands.Bot(command_prefix="?", description=description, intents=intents)
 URL = 'https://stt.api.cloud.yandex.net/speech/v1/stt:recognize'
@@ -106,5 +107,5 @@ async def stop(ctx):
 
 
 if __name__ == "__main__":
-    token = 'OTY5MTgzNzUyNjUzNzk5NDg0.YmpstQ.dVnQ6mpc_9adkO4XrJMgC5BiBkA'
+    token = os.environ['BOT_TOKEN']
     bot.run(token)
