@@ -28,15 +28,25 @@ speaking_queue = asyncio.queues.Queue()
 
 
 class UserContainer:
+    TARGET_MS = 400
+    FRAME_SIZE = 3840
+    ms = 20
+    BORDER = TARGET_MS * FRAME_SIZE // ms
+
+
     def __init__(self, user_id, ctx):
         self.ctx = ctx
         self.user_id = user_id
         self.queue = asyncio.queues.Queue()
+        self.buffer = bytes()
         asyncio.ensure_future(self._communicate_queue(ctx))
 
     def put_bytes(self, audio_content):
-        msg = stt_service_pb2.StreamingRecognitionRequest(audio_content=audio_content)
-        self.queue.put_nowait(msg)
+        self.buffer += audio_content
+        if len(self.buffer) > UserContainer.BORDER:
+            msg = stt_service_pb2.StreamingRecognitionRequest(audio_content=self.buffer)
+            self.queue.put_nowait(msg)
+            self.buffer = bytes()
 
     @staticmethod
     async def generate_from_queue(queue):
@@ -54,6 +64,7 @@ class UserContainer:
         # Process server responses and output the result to the console.
         try:
             while True:
+                print('Sent request, waiting for reply')
                 r = await it.read()
                 # print(r)
                 try:
