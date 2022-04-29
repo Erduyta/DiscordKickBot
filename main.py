@@ -3,10 +3,14 @@ import json
 import time
 import threading
 import os
+import typing
+from collections import defaultdict
 
 import discord
 import requests
 from discord.ext import commands
+
+from UserContainer import UserContainer
 
 import grpc
 
@@ -23,62 +27,7 @@ intents.members = True
 intents.message_content = True
 
 bot = commands.Bot(command_prefix="?", description=description, intents=intents)
-URL = 'https://stt.api.cloud.yandex.net/speech/v1/stt:recognize'
-IAM_TOKEN = os.environ["IAM_TOKEN"]
-ID_FOLDER = "b1g5pq4lh1ktoijrb9u1"
-kostil = True
-
-cred = grpc.ssl_channel_credentials()
-channel = grpc.aio.secure_channel('stt.api.cloud.yandex.net:443', cred)
-stub = stt_service_pb2_grpc.SttServiceStub(channel)
-user_queue = []
-
-specification = stt_service_pb2.RecognitionSpec(
-    language_code='ru-RU',
-    profanity_filter=False,
-    model='general',
-    partial_results=True,
-    audio_encoding='LINEAR16_PCM',
-    sample_rate_hertz=48000
-)
-streaming_config = stt_service_pb2.RecognitionConfig(specification=specification, folder_id=ID_FOLDER)
-config_msg = stt_service_pb2.StreamingRecognitionRequest(config=streaming_config)
-speaking_queue = asyncio.queues.Queue()
-
-
-async def generate_from_queue(queue):
-    yield config_msg
-    while True:
-        yield await queue.get()
-
-
-async def communicate_queue(gen, ctx):
-    global stub
-
-    it = stub.StreamingRecognize(
-        gen,
-        metadata=(('authorization', 'Bearer %s' % IAM_TOKEN),)
-    )
-    # Process server responses and output the result to the console.
-    try:
-        while True:
-            r = await it.read()
-            #print(r)
-            try:
-                print('Start chunk: ')
-                for chunk in r.chunks:
-                    for alternative in chunk.alternatives:
-                        print('alternative: ', alternative.text)
-                        if 'никита' in str(alternative.text).lower():
-                            member_to_kick = ctx.voice_client.channel.guild.get_member(217594729896869888)
-                            await member_to_kick.edit(voice_channel=None)
-                print('Is final: ', r.chunks[0].final)
-
-                #print('')
-            except LookupError:
-                print('Not available chunks')
-    except Exception as err:
-        print(err)
+user_containers: dict[str, UserContainer] = {}
 
 
 @bot.event
@@ -91,38 +40,21 @@ async def on_ready():
 @bot.command()
 async def start(ctx):
     await ctx.author.voice.channel.connect()
-    asyncio.ensure_future(
-        communicate_queue(generate_from_queue(speaking_queue), ctx)
-    )
     await serve(ctx)
-    # Connect to the voice channel of the author
 
 
 async def serve(ctx):
-    ctx.voice_client.start_recording(discord.sinks.PCMSink(), finished_callback, ctx) # Start the recording
-    #print("Recording...")
+    ctx.voice_client.start_recording(discord.sinks.PCMSink(), finished_callback, ctx)
     await asyncio.sleep(0.2)
     ctx.voice_client.stop_recording()
-    #print("Stopped!")
-
 
 
 async def finished_callback(sink, ctx):
-    #print(sink.audio_data)
-    # print(dir(sink.audio_data))
-    # Here you can access the recorded files:
-    recorded_users = [
-        f"<@{user_id}>"
-        for user_id, audio in sink.audio_data.items()
-    ]
-    files = [discord.File(audio.file, f"{user_id}.{sink.encoding}") for user_id, audio in sink.audio_data.items()]
+    global user_containers
     for user_id, audio in sink.audio_data.items():
-        #speaking_queue.put_nowait(audio.file)
-        msg = stt_service_pb2.StreamingRecognitionRequest(audio_content=audio.file.read())
-        speaking_queue.put_nowait(msg)
-        # file = discord.File(audio.file, f"{user_id}.{sink.encoding}")
-        # print(dir(audio.file))
-        # text = recognize(audio.file).get('result', '').lower()
+        if not user_containers.get(user_id):
+            user_containers[user_id] = UserContainer(user_id, ctx)
+        user_containers[user_id].put_bytes(audio.file.read())
     await serve(ctx)
 
 @bot.command()
